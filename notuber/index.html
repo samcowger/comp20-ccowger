@@ -5,7 +5,7 @@
         <title>Not Uber</title>
         <link rel="stylesheet" href="style.css">
 
-        <script src="https://maps.googleapis.com/maps/api/js" async defer>
+        <script src="https://maps.googleapis.com/maps/api/js" sync defer>
         </script>
 
         <script type="text/javascript">
@@ -17,14 +17,13 @@
                 navigator.geolocation.getCurrentPosition(function(position) {
                     latitude = position.coords.latitude;
                     longitude = position.coords.longitude;
+                    myLatLng = {lat: latitude, lng: longitude};
+
                     mydata = "username=OGyGLT4c&lat=" + latitude + "&lng=" + longitude;
 
                     console.log(mydata);
 
-                    FuckTime();
-
-                    // document.getElementById("latitude").innerHTML = latitude;
-                    // document.getElementById("longitude").innerHTML = longitude;
+                    initMap();
                 })
             } else {
                 document.getElementById("latitude").innerHTML = "Nope";
@@ -32,39 +31,65 @@
 
             function initMap() {
                 map = new google.maps.Map(document.getElementById("map"));
-                map.setCenter(new google.maps.LatLng(latitude, longitude));
+
+                map.setCenter(myLatLng);
                 map.setZoom(14);
+
+                fuckTime();
             }
 
-            function FuckTime() {
+            function fuckTime() {
                 request = new XMLHttpRequest();
 
                 request.open("POST", "https://defense-in-derpth.herokuapp.com/submit", true);
 
                 request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
+                var requestdata;
+
                 request.onreadystatechange = function() {
                     if (request.readyState == 4 && request.status == 200) {
                         data = JSON.parse(request.responseText);
 
                         console.log(data);
+
+                        setMarkers();
                     }
                 }
 
                 request.send(mydata);
             }
+
+            function setMarkers() {
+                marker = new google.maps.Marker({
+                    position: myLatLng,
+                    map: map,
+                    title: 'it me bitch'
+                });
+                marker.setMap(map);
+
+                var userLatLng;
+                for (i = 0; i < data.vehicles.length; i++) {
+                    marker = new google.maps.Marker({
+                        position: {lat: data.vehicles[i].lat, lng: data.vehicles[i].lng},
+                        map: map,
+                        title: data.vehicles[i].username
+                    });
+
+                    marker.setMap(map);
+                }
+            }
         </script>
     </head>
 
-    <body onload="initMap()">
-        <h1>Not Uber</h1>
+    <body>
+        <!-- <h1>Not Uber</h1> -->
 
-        <h2 id="latitude"></h2>
-        <h2 id="longitude"></h2>
+        <!-- <h2 id="latitude"></h2>
+        <h2 id="longitude"></h2> -->
 
-        <div id="map" style="height:800px">Map goes here</div>
+        <div id="map"></div>
 
-        <div id="datagoeshere">Data goes here</div>
-
+        <!-- <div id="datagoeshere"></div> -->
     </body>
 </html>
