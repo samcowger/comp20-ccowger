@@ -5,8 +5,7 @@
         <title>Not Uber</title>
         <link rel="stylesheet" href="style.css">
 
-        <script src="https://maps.googleapis.com/maps/api/js?libraries=geometry" sync defer>
-        </script>
+        <script src="https://maps.googleapis.com/maps/api/js?libraries=geometry" sync defer></script>
 
         <script type="text/javascript">
             if (navigator.geolocation) {
@@ -14,10 +13,6 @@
                     latitude = position.coords.latitude;
                     longitude = position.coords.longitude;
                     myLatLng = new google.maps.LatLng(latitude, longitude);
-
-                    mydata = "username=OGyGLT4c&lat=" + latitude + "&lng=" + longitude;
-
-                    initMap();
                 })
             } else {
                 document.getElementById("map").innerHTML = "Geolocation not supported by this browser - download a better one and try again";
@@ -49,7 +44,7 @@
                     }
                 }
 
-                request.send(mydata);
+                request.send("username=OGyGLT4c&lat=" + latitude + "&lng=" + longitude);
             }
 
             function setSelf() {
@@ -91,7 +86,7 @@
         </script>
     </head>
 
-    <body>
+    <body onload="initMap()">
         <div id="map"></div>
     </body>
 </html>
