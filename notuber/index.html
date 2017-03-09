@@ -21,12 +21,12 @@
 
                     mydata = "username=OGyGLT4c&lat=" + latitude + "&lng=" + longitude;
 
-                    console.log(mydata);
+                    //console.log(mydata);
 
                     initMap();
                 })
             } else {
-                document.getElementById("latitude").innerHTML = "Nope";
+                document.getElementById("latitude").innerHTML = "Geolocation not supported by this browser - download a better one and try again";
             }
 
             function initMap() {
@@ -35,10 +35,10 @@
                 map.setCenter(myLatLng);
                 map.setZoom(14);
 
-                fuckTime();
+                req();
             }
 
-            function fuckTime() {
+            function req() {
                 request = new XMLHttpRequest();
 
                 request.open("POST", "https://defense-in-derpth.herokuapp.com/submit", true);
@@ -61,20 +61,25 @@
             }
 
             function setMarkers() {
+                var infowindow = new google.maps.InfoWindow();
+
                 marker = new google.maps.Marker({
                     position: myLatLng,
                     map: map,
-                    title: 'it me bitch'
+                    title: "OGyGLT4c",
+                    icon: "black_car.png"
                 });
 
                 var myinfo = new google.maps.InfoWindow();
 
                 marker.addListener('click', function () {
-                    myinfo.setContent(this.title);
-                    myinfo.open(map, this);
+                    infowindow.setContent(this.title);
+                    infowindow.open(map, this);
                 });
 
                 marker.setMap(map);
+
+                console.log(data.name);
 
                 var userLatLng;
                 for (i = 0; i < data.passengers.length; i++) {
@@ -83,8 +88,6 @@
                         map: map,
                         title: data.passengers[i].username
                     });
-
-                    var infowindow = new google.maps.InfoWindow();
 
                     marker.addListener('click', function () {
                         infowindow.setContent(this.title);
@@ -100,13 +103,6 @@
     </head>
 
     <body>
-        <!-- <h1>Not Uber</h1> -->
-
-        <!-- <h2 id="latitude"></h2>
-        <h2 id="longitude"></h2> -->
-
         <div id="map"></div>
-
-        <!-- <div id="datagoeshere"></div> -->
     </body>
 </html>
