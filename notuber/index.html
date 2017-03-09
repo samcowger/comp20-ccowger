@@ -9,10 +9,6 @@
         </script>
 
         <script type="text/javascript">
-            var latitude;
-            var longitude;
-            var mydata;
-
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
                     latitude = position.coords.latitude;
@@ -20,8 +16,6 @@
                     myLatLng = new google.maps.LatLng(latitude, longitude);
 
                     mydata = "username=OGyGLT4c&lat=" + latitude + "&lng=" + longitude;
-
-                    //console.log(mydata);
 
                     initMap();
                 })
@@ -33,19 +27,17 @@
                 map = new google.maps.Map(document.getElementById("map"));
 
                 map.setCenter(myLatLng);
-                map.setZoom(14);
+                map.setZoom(16);
 
-                req();
+                requestData();
             }
 
-            function req() {
+            function requestData() {
                 request = new XMLHttpRequest();
 
                 request.open("POST", "https://defense-in-derpth.herokuapp.com/submit", true);
 
                 request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
-                var requestdata;
 
                 request.onreadystatechange = function() {
                     if (request.readyState == 4 && request.status == 200) {
@@ -63,14 +55,12 @@
             function setSelf() {
                 infowindow = new google.maps.InfoWindow();
 
-                marker = new google.maps.Marker({
+                var marker = new google.maps.Marker({
                     position: myLatLng,
                     map: map,
                     title: "OGyGLT4c",
                     icon: "black_car.png"
                 });
-
-                var myinfo = new google.maps.InfoWindow();
 
                 marker.addListener('click', function () {
                     infowindow.setContent(this.title);
@@ -79,32 +69,25 @@
 
                 marker.setMap(map);
 
-                setMarkers();
+                setUsers();
             }
 
-            function setMarkers() {
-                var userLatLng;
+            function setUsers() {
                 for (i = 0; i < data.passengers.length; i++) {
-                    userLatLng = new google.maps.LatLng(data.passengers[i].lat, data.passengers[i].lng);
-
-                    marker = new google.maps.Marker({
-                        position: userLatLng,
+                    var marker = new google.maps.Marker({
+                        position: {lat: data.passengers[i].lat, lng: data.passengers[i].lng},
                         map: map,
                         title: data.passengers[i].username
                     });
 
                     marker.addListener('click', function () {
-                        infowindow.setContent(this.title + "<br>" +
-                        google.maps.geometry.spherical.computeDistanceBetween(
-                            myLatLng, this.position) * 0.000621371 + " miles away");
+                        infowindow.setContent(this.title + "<br>" + (google.maps.geometry.spherical.computeDistanceBetween(myLatLng, this.position) * 0.000621371).toFixed(2) + " miles away");
                         infowindow.open(map, this);
                     });
 
                     marker.setMap(map);
                 }
             }
-
-
         </script>
     </head>
 
