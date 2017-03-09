@@ -5,7 +5,7 @@
         <title>Not Uber</title>
         <link rel="stylesheet" href="style.css">
 
-        <script src="https://maps.googleapis.com/maps/api/js" sync defer>
+        <script src="https://maps.googleapis.com/maps/api/js?libraries=geometry" sync defer>
         </script>
 
         <script type="text/javascript">
@@ -17,7 +17,7 @@
                 navigator.geolocation.getCurrentPosition(function(position) {
                     latitude = position.coords.latitude;
                     longitude = position.coords.longitude;
-                    myLatLng = {lat: latitude, lng: longitude};
+                    myLatLng = new google.maps.LatLng(latitude, longitude);
 
                     mydata = "username=OGyGLT4c&lat=" + latitude + "&lng=" + longitude;
 
@@ -26,7 +26,7 @@
                     initMap();
                 })
             } else {
-                document.getElementById("latitude").innerHTML = "Geolocation not supported by this browser - download a better one and try again";
+                document.getElementById("map").innerHTML = "Geolocation not supported by this browser - download a better one and try again";
             }
 
             function initMap() {
@@ -53,15 +53,15 @@
 
                         console.log(data);
 
-                        setMarkers();
+                        setSelf();
                     }
                 }
 
                 request.send(mydata);
             }
 
-            function setMarkers() {
-                var infowindow = new google.maps.InfoWindow();
+            function setSelf() {
+                infowindow = new google.maps.InfoWindow();
 
                 marker = new google.maps.Marker({
                     position: myLatLng,
@@ -79,18 +79,24 @@
 
                 marker.setMap(map);
 
-                console.log(data.name);
+                setMarkers();
+            }
 
+            function setMarkers() {
                 var userLatLng;
                 for (i = 0; i < data.passengers.length; i++) {
+                    userLatLng = new google.maps.LatLng(data.passengers[i].lat, data.passengers[i].lng);
+
                     marker = new google.maps.Marker({
-                        position: {lat: data.passengers[i].lat, lng: data.passengers[i].lng},
+                        position: userLatLng,
                         map: map,
                         title: data.passengers[i].username
                     });
 
                     marker.addListener('click', function () {
-                        infowindow.setContent(this.title);
+                        infowindow.setContent(this.title + "<br>" +
+                        google.maps.geometry.spherical.computeDistanceBetween(
+                            myLatLng, this.position) * 0.000621371 + " miles away");
                         infowindow.open(map, this);
                     });
 
