@@ -13,8 +13,14 @@
                     latitude = position.coords.latitude;
                     longitude = position.coords.longitude;
                     myLatLng = new google.maps.LatLng(latitude, longitude);
+
+                    initMap();
                 })
-            } else {
+            }
+            else if (request.readyState == 4 && request.status != 200) {
+                document.getElementById("map").innerHTML = "Something went wrong";
+            }
+            else {
                 document.getElementById("map").innerHTML = "Geolocation not supported by this browser - download a better one and try again";
             }
 
@@ -54,8 +60,9 @@
                     position: myLatLng,
                     map: map,
                     title: "OGyGLT4c",
-                    icon: "black_car.png"
                 });
+
+                if (data.passengers) marker.setIcon("black_car.png");
 
                 marker.addListener('click', function () {
                     infowindow.setContent(this.title);
@@ -64,15 +71,35 @@
 
                 marker.setMap(map);
 
-                setUsers();
+                if      (data.passengers) setPassengers();
+                else if (data.vehicles)   setVehicles();
             }
 
-            function setUsers() {
+            function setVehicles() {
+                for (i = 0; i < data.vehicles.length; i++) {
+                    var marker = new google.maps.Marker({
+                        position: {lat: data.vehicles[i].lat, lng: data.vehicles[i].lng},
+                        map: map,
+                        title: data.vehicles[i].username,
+                        icon: "black_car.png"
+                    });
+
+                    marker.addListener('click', function () {
+                        infowindow.setContent(this.title + "<br>" + (google.maps.geometry.spherical.computeDistanceBetween(myLatLng, this.position) * 0.000621371).toFixed(2) + " miles away");
+                        infowindow.open(map, this);
+                    });
+
+                    marker.setMap(map);
+                }
+            }
+
+            function setPassengers() {
                 for (i = 0; i < data.passengers.length; i++) {
                     var marker = new google.maps.Marker({
                         position: {lat: data.passengers[i].lat, lng: data.passengers[i].lng},
                         map: map,
-                        title: data.passengers[i].username
+                        title: data.passengers[i].username,
+                        icon: "steve.jpeg"
                     });
 
                     marker.addListener('click', function () {
@@ -86,7 +113,7 @@
         </script>
     </head>
 
-    <body onload="initMap()">
+    <body>
         <div id="map"></div>
     </body>
 </html>
