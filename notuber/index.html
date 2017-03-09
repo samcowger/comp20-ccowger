@@ -66,19 +66,36 @@
                     map: map,
                     title: 'it me bitch'
                 });
+
+                var myinfo = new google.maps.InfoWindow();
+
+                marker.addListener('click', function () {
+                    myinfo.setContent(this.title);
+                    myinfo.open(map, this);
+                });
+
                 marker.setMap(map);
 
                 var userLatLng;
-                for (i = 0; i < data.vehicles.length; i++) {
+                for (i = 0; i < data.passengers.length; i++) {
                     marker = new google.maps.Marker({
-                        position: {lat: data.vehicles[i].lat, lng: data.vehicles[i].lng},
+                        position: {lat: data.passengers[i].lat, lng: data.passengers[i].lng},
                         map: map,
-                        title: data.vehicles[i].username
+                        title: data.passengers[i].username
+                    });
+
+                    var infowindow = new google.maps.InfoWindow();
+
+                    marker.addListener('click', function () {
+                        infowindow.setContent(this.title);
+                        infowindow.open(map, this);
                     });
 
                     marker.setMap(map);
                 }
             }
+
+
         </script>
     </head>
 
