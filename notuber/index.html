@@ -16,8 +16,7 @@
 
                     initMap();
                 })
-            }
-            else {
+            } else {
                 document.getElementById("map").innerHTML = "Geolocation not supported by this browser - download a better one and try again";
             }
 
@@ -25,7 +24,7 @@
                 map = new google.maps.Map(document.getElementById("map"));
 
                 map.setCenter(myLatLng);
-                map.setZoom(16);
+                map.setZoom(15);
 
                 requestData();
             }
