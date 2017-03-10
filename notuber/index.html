@@ -17,9 +17,6 @@
                     initMap();
                 })
             }
-            else if (request.readyState == 4 && request.status != 200) {
-                document.getElementById("map").innerHTML = "Something went wrong";
-            }
             else {
                 document.getElementById("map").innerHTML = "Geolocation not supported by this browser - download a better one and try again";
             }
@@ -48,6 +45,9 @@
 
                         setSelf();
                     }
+                    else if (request.readyState == 4 && request.status != 200) {
+                        document.getElementById("map").innerHTML = "Something went wrong";
+                    }
                 }
 
                 request.send("username=OGyGLT4c&lat=" + latitude + "&lng=" + longitude);
@@ -63,6 +63,7 @@
                 });
 
                 if (data.passengers) marker.setIcon("black_car.png");
+                else                 marker.setIcon("steve.jpeg");
 
                 marker.addListener('click', function () {
                     infowindow.setContent(this.title);
@@ -71,8 +72,8 @@
 
                 marker.setMap(map);
 
-                if      (data.passengers) setPassengers();
-                else if (data.vehicles)   setVehicles();
+                if   (data.passengers) setPassengers();
+                else                   setVehicles();
             }
 
             function setVehicles() {
@@ -114,6 +115,7 @@
     </head>
 
     <body>
+        <h1>Not Uber</h1>
         <div id="map"></div>
     </body>
 </html>
