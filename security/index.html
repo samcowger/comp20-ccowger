@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="style.css">
+        <title>Security</title>
+    </head>
+    <body>
+        <h1>COMP 20 Assignment 4: Security</h1>
+        <h2 style="text-align:center">Sam Cowger</h2><br>
+
+        <h2>Introduction</h2>
+            <p>The product in question is a black car service. My duty was to probe it for security weaknesses and suggest what could be done to stop them. I was to act as a white hat hacker. I was tasked with finding at least three security/privacy issues in the app, and was given access to both the frontend and backend code for it. Below are my findings.</p><br>
+
+        <h2>Methodology</h2>
+            <p>I began by considering the assignment. I knew the specifications, so I was able to immediately consider where certain vulnerabilities might appear. I knew that data sent to the app would have to be displayed in HTML on a web page, so I noted that as a possible weak point and tested it using <span class="code"><a href="https://curl.haxx.se">curl</a></span>. My findings vis-à-vis this vulnerability are documented in the section on <a href="#Issue1">the first vulnerability</a>.</p>
+            <p>Next, I considered the database aspect of this. If I could cause my own HTML to be rendered, perhaps user input wasn't being properly sanitized throughout the application. Perhaps a MongoDB command could be employed for nefarious purposes. I <a href="#Ref2">discovered</a> how to apply MongoDB commands through a web query string, applied what I learned, and found <a href="#Issue2">another vulnerability</a> in the app.</p>
+            <p>I returned to the first issue and considered further the implications. If I could inject HTML, what was to stop me from conducting a full Cross-Site Scripting (XSS) attack? I returned to <span class="code">curl</span> to attempt a further attack and found that the vulnerability in issue 1 could be exploited <a href="#Issue3">quite a bit more</a>.</p><br>
+
+        <h2>Abstract of Findings</h2>
+        <p>I found that a user with malicious intent could conduct a variety of attacks on this web application. With the knowledge and inclination, someone could cause the app to become almost unusable, and could also cause users of the app to be redirected to a third party website, which could cause behavior entirely different from that of the app.</p><br>
+
+
+
+        <h2>Issues Found</h2>
+        <ol>
+            <a id="Issue1"></a>
+            <li>HTML insertion (an image, in this example)</li><br>
+
+            <span class="issue-type">Issue:&nbsp;</span>
+            I was able to cause an image to be displayed on the home page.<br><br>
+
+            <span class="issue-type">Location:&nbsp;</span>
+            The <a href="https://frozen-reaches-32628.herokuapp.com/">home page</a> of the web app.<br><br>
+
+            <span class="issue-type">Severity:&nbsp;</span>
+            Medium. By causing the homepage to display an image of my choice, I've demonstrated the ability to do more. I could have sent a disguised hyperlink to a malicious site, by styling it to look like <a href="https://www.google.com/" style="color:black;text-decoration:none;">normal text</a>. I could have caused the image itself to be a link. I could have displayed a violent or pornographic image. I could have caused any sort of page to be displayed, or even caused a page redirect. That page could easily cause a file to be downloaded to a user's computer, which could then be opened, accidentally or on purpose. Users would be powerless to stop this from happening, and I would be able, if not to disable the web app, then to make it practically unusable. I claim this issue to be only medium only due to the vulnerabilities documented in <a href="#Issue3">issue 3</a>.
+            <br><br>
+
+            <span class="issue-type">Description of issue:&nbsp;</span>
+            The issue is sending HTML "code" to the website by causing the application to consider it as a username. Since the front page of the app is set to display all usernames on the home directory in plain HTML, and since the input isn't filtered in any way, the app does the hard work to render whatever HTML I might send to it. I sent the image as HTML in the username field using <span class="code">curl</span>, like so: <span class="code">curl --data "username=&lt;img src=\"https://i.kinja-img.com/gawker-media/image/upload/gipcqovkfqlw3bhuxqjr.jpg\" style=\"display:block;margin:auto;width:80%;\"&gt;&lt;br&gt;&lat=0&lng=0" https://frozen-reaches-32628.herokuapp.com/submit</span><br>
+            <p>I was able to send the image only after escaping the quotation marks with a backslash. I was also able to include styling for the image.</p>
+            <br><br>
+
+            <span class="issue-type">Proof of vulnerability:&nbsp;</span>
+            This screen capture is proof that I was able to make an image appear from a different website, in this case <a href="https://www.jalopnik.com/">Jalopnik</a>, quite definitively a third party.
+            <a href="issue1.png"><img id="issue1" src="issue1.png" alt="Third party image on home page"></a>
+
+            <span class="issue-type">Recommendations:&nbsp;</span>
+            Problematic though this issue may be, it can be eliminated by adding rather simple code to the server to remove or replace certain characters in whatever data is sent. In the server, there exist the following lines of code:<br>
+            <p><ul>
+                <span class="code">
+                    var lng = request.body.lng;<br>
+                    var lat = request.body.lat;<br>
+                    var username = request.body.username;<br>
+                </span>
+            </ul></p>
+
+            <p>To sanitize user input, add the following lines of code ater where the above lines of code are executed and before the data is inserted into the database collection:</p>
+            <p>
+                <ul>
+                <span class="code">
+                    lng = lng.replace(/[^\w\s]/gi, '');<br>
+                    lat = lat.replace(/[^\w\s]/gi, '');<br>
+                    username = username.replace(/[^\w\s]/gi, '');<br>
+                </span>
+            </ul></p><br><br>
+
+
+
+            <a id="Issue2"></a>
+            <li>MongoDB Database Command Abuse</li><br>
+
+            <span class="issue-type">Issue:&nbsp;</span>
+            I was able to use a MongoDB command to display the data associated with a vehicle whose information I did not know.
+            <br><br>
+
+            <span class="issue-type">Location:&nbsp;</span>
+            The <a href="https://frozen-reaches-32628.herokuapp.com/vehicle.json">/vehicle.json</a> route of the web app.
+            <br><br>
+
+            <span class="issue-type">Severity:&nbsp;</span>
+            Medium-high. When testing this, I began by researching how to include MongoDB commands as query strings in a URL. When I found <a href="#Ref2">the answer</a>, I tested it to find out if this particular application had this particular vulnerability, and it did, though not in a way that would cause exceptional amounts of sensitive data to be displayed. That being said, it did absolutely allow me to see the personal information of drivers about whom I had no reason to know. The reason I don't rate this vulnerability's severity as high is because not <a style="font-style:italic">all</a> user data is exposed through this vulnerability, as explained below.
+            <br><br>
+
+            <span class="issue-type">Description of issue:&nbsp;</span>
+            The desired functionality of the application is for a user who has knowledge of a vehicle's username to be able to gather data about that vehicle. This allows for selective sharing of vehicle data without exposing sensitive data to those who shouldn't be able to see it. With this issue, however, we are able to do just that. By visiting the URL <a href="https://frozen-reaches-32628.herokuapp.com/vehicle.json?username[$ne]=">https://frozen-reaches-32628.herokuapp.com/vehicle.json?username[$ne]=</a>, one is telling the database not to fetch data for a specific vehicle, but rather to fetch data for <a style="font-style:italic">any</a> vehicle whose username is not blank.</p>
+            <p>Having discovered one username (JANET, in this case), one could then visit <a href="https://frozen-reaches-32628.herokuapp.com/vehicle.json?username[$ne]=JANET">https://frozen-reaches-32628.herokuapp.com/vehicle.json?username[$ne]=JANET</a> to find another vehicle's data. I can use another MongoDB command, $gt ("greater than") to discover yet another vehicle username, using <a href="https://frozen-reaches-32628.herokuapp.com/vehicle.json?username[$gt]=JANET">https://frozen-reaches-32628.herokuapp.com/vehicle.json?username[$gt]=JANET</a>. I was unable to continue to use MongoDB commands to access more vehicle usernames.</p><br>
+
+            <span class="issue-type">Proof of vulnerability:&nbsp;</span>
+            This was the result of visiting <a href="https://frozen-reaches-32628.herokuapp.com/vehicle.json?username[$ne]=">https://frozen-reaches-32628.herokuapp.com/vehicle.json?username[$ne]=</a> in a web browser:
+            <a href="issue2_1.png"><img id="issue2" src="issue2_1.png" alt="MongoDB command injection via URL"></a>
+            I then used the username JANET in the query string to get another vehicle's information, with <a href="https://frozen-reaches-32628.herokuapp.com/vehicle.json?username[$ne]=JANET">https://frozen-reaches-32628.herokuapp.com/vehicle.json?username[$ne]=JANET</a>:
+            <a href="issue2_2.png"><img id="issue2" src="issue2_2.png" alt="MongoDB command injection via URL"></a>
+            Substituting $gt for $ne, i.e. <a href="https://frozen-reaches-32628.herokuapp.com/vehicle.json?username[$gt]=JANET">https://frozen-reaches-32628.herokuapp.com/vehicle.json?username[$gt]=JANET</a>, resulted in a <span style="font-style:italic">third</span> vehicle username:
+            <a href="issue2_3.png"><img id="issue2" src="issue2_3.png" alt="MongoDB command injection via URL"></a>
+
+            <span class="issue-type">Recommendations:&nbsp;</span>
+            The task of sanitizing user input here is as easy as it is above. This code appears in the server:<br>
+            <p><ul>
+                <span class="code">
+                    var name = request.query.username;<br>
+                </span>
+            </ul></p>
+            <p>Similar to the above process, sanitization is as simple as adding this after the above code:</p>
+            <p>
+                <ul>
+                <span class="code">
+                    name = name.replace(/[^\w\s]/gi, '');<br>
+                </span>
+            </ul></p><br><br>
+
+
+
+            <a id="Issue3"></a>
+            <li>JavaScript injection via <span class="code">curl</span> (a Cross-Site Scripting vulnerability)</li><br>
+
+            <span class="issue-type">Issue:&nbsp;</span>
+            I was able to cause the home page of the application to execute JavaScript code of my own, through a Cross-Site Scripting attack.<br><br>
+
+            <span class="issue-type">Location:&nbsp;</span>
+            The <a href="https://frozen-reaches-32628.herokuapp.com/">home page</a> of the web app.<br><br>
+
+            <span class="issue-type">Severity:&nbsp;</span>
+            High. I (or a malicious actor) can easily send JavaScript to this site and have it injected directly into the HTML, as the domain <a href="https://frozen-reaches-32628.herokuapp.com/">https://frozen-reaches-32628.herokuapp.com/</a> is set to display every passenger in the database (their username, their latitude, their longitude, and when they requested the vehicle). In addition, if script tags are allowed, then there is little limit to what could be accomplished; the website could be almost entirely hijacked.<br><br>
+
+            <span class="issue-type">Description of issue:&nbsp;</span>
+            The issue here is JS code being injected directly into HTML, as mentioned above. Doing this is accomplished through "hijacking" one of the features of the application, the ability to send data to it in the form of a username. Sending said data is easy when using <span class="code">curl</span>, like in issue 1, with a command like this: <br><span class="code">curl --data "username=&lt;script&gt;alert(\"This looks like a vulnerability to me!\");&lt;/script&gt;&lat=0&lng=0" https://frozen-reaches-32628.herokuapp.com/submit</span>
+            <p>As in issue 1, I had to escape the quotation marks with a backslash to negate MongoDB's data parser.</p><br>
+
+            <span class="issue-type">Proof of vulnerability:&nbsp;</span>
+            Here is a screenshot of the alert I was able to cause to appear via the above JavaScript command:
+            <a href="issue3.png"><img id="issue3" src="issue3.png" alt="JavaScript alert (XSS vulnerability)"></a>
+
+            <span class="issue-type">Recommendations:&nbsp;</span>
+            The solution to this is identical to that of <a href="#Issue1">issue 1</a>, simply removing characters that could cause problems:
+            <p>
+                <ul>
+                <span class="code">
+                    lng = lng.replace(/[^\w\s]/gi, '');<br>
+                    lat = lat.replace(/[^\w\s]/gi, '');<br>
+                    username = username.replace(/[^\w\s]/gi, '');<br>
+                </span>
+            </ul></p>
+
+        </ol><br>
+
+        <h2>Conclusion</h2>
+        <p>The vulnerabilities that I have found exploit the fact that the server does not filter user input, a grave but in this case easily fixable mistake. I was not able to find more issues because this server is a fairly simple one. There are three directories of the web page, and only two accept data of any sort. It is only these two sources of user input that need to be rectified. The cost to fix any of these issues can be as low as free, if the creator of the server is willing to take the 10 minutes or so necessary to learn the necessary JavaScript syntax to remove or replace characters. It would take a specialist no more than 5 minutes to understand the server and its vulnerabilities and to include the necessary code as I described above.</p><br>
+
+        <h2>References</h2>
+            <p>In <a href="#Issue1">issue 1</a> and <a href="Issue3">issue 3</a>, input sanitation code came from a class example, <a href="https://github.com/tuftsdev/WebProgramming/blob/gh-pages/examples/nodejs/nodemongoapp/server.js">posted on GitHub</a>.</p>
+            <a id="Ref2"></a><p>In <a href="#Issue2">issue 2</a>, knowledge of how to manipulate query strings to include MongoDB commands came from the Synopsys <a href="https://www.synopsys.com/blogs/software-security/preventing-common-mean-stack-vulnerabilities/">Software Security blog</a></p></a>
+    </body>
+</html>

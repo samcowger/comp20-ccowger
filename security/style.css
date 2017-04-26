@@ -1,0 +1,49 @@
+body {
+    font-family: helvetica neue;
+    font-weight: 300;
+    margin-top: 4%;
+    margin-bottom: 4%;
+    margin-left: 3%;
+    margin-right: 3%;
+    line-height: 23px;
+}
+img {
+    display: block;
+    margin: auto;
+}
+h1 {
+    text-align: center;
+    font-size: 36pt;
+    line-height: normal;
+}
+a:visited {
+    color: blue;
+}
+a:hover {
+    color: red;
+    transition: 0.35s ease;
+}
+img:hover {
+    opacity: 0.75;
+    transition: 0.5s;
+}
+li {
+    font-size: 14pt;
+}
+#issue1 {
+    width: 75%;
+}
+#issue2 {
+    width: 85%;
+}
+#issue3 {
+    width: 75%;
+}
+.code {
+    font-family: monospace;
+    line-height: normal;
+}
+.issue-type {
+    font-size: 12pt;
+    font-weight: bold;
+}
